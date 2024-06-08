@@ -1,0 +1,39 @@
+name: Bandit Analysis
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * *'  # Run daily at midnight
+    - cron: '0 * * * *'  # Run every hour
+
+jobs:
+  run_bandit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2.3.4
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: Install Bandit
+        run: pip install requests pandas bandit
+        
+      - name: Run Bandit
+        run: python compliance_check.py .
+
+      - name: Upload CSV Output
+        uses: actions/upload-artifact@v2
+        with:
+          name: compliance csv
+          path: compliance_report.csv
+
+
+
+               
+ 
