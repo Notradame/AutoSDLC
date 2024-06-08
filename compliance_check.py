@@ -11,6 +11,10 @@ def download_files(repo_url, local_dir):
     for file in files:
         download_url = file['download_url']
         file_name = os.path.join(local_dir, file['name'])
+        if not file_name.lower().endswith(".py"):
+            print(f"Skipping file '{file_name}' as it is not a python file");
+            continue
+        print(f"Downloading to path '{file_name}'")
         file_content = requests.get(download_url).text
         with open(file_name, 'w') as f:
             f.write(file_content)
@@ -56,17 +60,18 @@ def save_compliance_report(issues, output_file):
     issues_data = [format_issue(issue) for issue in issues]
     df = pd.DataFrame(issues_data)
     df.to_csv(output_file, index=False)
-    print(f"Issues saved to {output_file}")
+    print(f"Issues saved to '{output_file}'")
 
 def main():
 
     repo_url = "https://api.github.com/repos/Notradame/AutoSDLC/contents/"
     directory = "temp"
-    
     download_files(repo_url, directory)
     issues = scan_directory(directory)
+    print("====================ISSUE_LIST====================")
     for issue in issues:
-        print(issue)
+        print(f"{issue.text} '{issue.fname}'")
+    print("====================XXXXXXXXXX====================")
     if issues:
         save_compliance_report(issues, "compliance_report.csv")
     else:
