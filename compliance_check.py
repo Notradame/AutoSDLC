@@ -66,8 +66,9 @@ def save_compliance_report(issues, output_file):
 def convert_github_url_to_api(url):
     if not url.startswith("https://github.com/"):
         raise ValueError("Invalid GitHub URL")
-    repo_path = url[len("https://github.com/"):]
-    return f"https://api.github.com/repos/{repo_path}/contents/"
+    repo_path = url[len("https://github.com/"):].split('/')
+    assert len(repo_path) >= 2, "Looks like an invalid repo"
+    return f"https://api.github.com/repos/{repo_path[0]}/{repo_path[1]}/contents/"
 
 def main(repo_url, directory="temp"):
     download_files(repo_url, directory)
