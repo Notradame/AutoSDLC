@@ -62,10 +62,13 @@ def save_compliance_report(issues, output_file):
     df.to_csv(output_file, index=False)
     print(f"Issues saved to '{output_file}'")
 
-def main():
+def convert_github_url_to_api(url):
+    if not url.startswith("https://github.com/"):
+        raise ValueError("Invalid GitHub URL")
+    repo_path = url[len("https://github.com/"):]
+    return f"https://api.github.com/repos/{repo_path}/contents/"
 
-    repo_url = "https://api.github.com/repos/Notradame/AutoSDLC/contents/"
-    directory = "temp"
+def main(repo_url, directory="temp"):
     download_files(repo_url, directory)
     issues = scan_directory(directory)
     print("====================ISSUE_LIST====================")
@@ -78,4 +81,15 @@ def main():
         print("No issues found.")
 
 if __name__ == "__main__":
-    main()
+    api_url = None
+    if len(sys.argv) != 2:
+        print("Usage: python <file_name> <repo_url>")
+    else:
+        repo_url = sys.argv[1]
+        try:
+            api_url = convert_github_url_to_api(repo_url)
+            print(api_url)
+        except ValueError as e:
+            print(e)
+            
+    main(api_url)
