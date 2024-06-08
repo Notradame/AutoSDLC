@@ -4,9 +4,23 @@ import pandas as pd
 import requests
 from bandit.core import manager, config
 
+def get_all_nested_files(url, file_list = []):
+    response = requests.get(url)
+    assert response.status_code == '200', "error with api"
+    js_res = response.json()
+    for item in js_res:
+        if item['type'] == "file":
+            print(item['download_url'])
+            file_list.append(item['download_url'])
+        elif item['type'] == "dir":
+            file_list.extend(get_all_nested_files(item['url'])) 
+        
+    return file_list
+
 def download_files(repo_url, local_dir):
-    response = requests.get(repo_url)
-    files = response.json()
+    files = get_all_nested_files(repo_url)
+    for file in files: print(file)
+    exit()
     if not os.path.exists(local_dir):
         os.makedirs(local_dir)
     for file in files:
@@ -67,7 +81,8 @@ def convert_github_url_to_api(url):
     if not url.startswith("https://github.com/"):
         raise ValueError("Invalid GitHub URL")
     repo_path = url[len("https://github.com/"):].split('/')
-    assert len(repo_path) >= 2, "Looks like an invalid repo"
+    assert len(repo_path) >= 2, "Looks like an invalid('/')"
+
     return f"https://api.github.com/repos/{repo_path[0]}/{repo_path[1]}/contents/"
 
 def main(repo_url, directory="temp"):
