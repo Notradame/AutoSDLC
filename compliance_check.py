@@ -4,9 +4,9 @@ import pandas as pd
 import requests
 from bandit.core import manager, config
 
-def get_all_nested_files(url, file_list = []):
+def get_file_list_recursive(url, file_list = []):
     response = requests.get(url)
-    assert response.status_code == '200', "error with api"
+    assert response.status_code == '200', response.text
     js_res = response.json()
     for item in js_res:
         if item['type'] == "file":
@@ -17,10 +17,33 @@ def get_all_nested_files(url, file_list = []):
         
     return file_list
 
+def get_first_level_files(url):
+    response = requests.get(url)
+    assert response.status_code == '200', response.text
+    files = response.json()
+    file_list = [file['download_url'] for file in files if file['type'] == "file"]
+    return file_list
+
+
 def download_files(repo_url, local_dir):
-    files = get_all_nested_files(repo_url)
-    for file in files: print(file)
-    exit()
+    response = requests.get(repo_url)
+    files = response.json()
+    if not os.path.exists(local_dir):
+        os.makedirs(local_dir)
+    for file in files:
+        download_url = file['download_url']
+        file_name = os.path.join(local_dir, file['name'])
+        if not file_name.lower().endswith(".py"):
+            print(f"Skipping file '{file_name}' as it is not a python file");
+            continue
+        print(f"Downloading to path '{file_name}'")
+        file_content = requests.get(download_url).text
+        with open(file_name, 'w') as f:
+            f.write(file_content)
+
+
+def download_(repo_url, local_dir):
+    files = get_first_level_files(repo_url)
     if not os.path.exists(local_dir):
         os.makedirs(local_dir)
     for file in files:
